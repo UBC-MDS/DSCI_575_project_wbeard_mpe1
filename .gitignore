@@ -5,6 +5,8 @@ Books.parquet
 meta_Books.parquet
 Books_sample.parquet
 meta_Books_sample.parquet
+top_Books.parquet
+top_meta_Books.parquet
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
