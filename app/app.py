@@ -141,7 +141,7 @@ def server(input, output, session):
                 "Author": doc.metadata.get("author"),
                 "Categories": doc.metadata.get("categories"),
                 "Average Rating": doc.metadata.get("average_rating"),
-                "Review": doc.page_content[:200],
+                "Review": doc.metadata.get("individual_review")[:200],
                 "Price": doc.metadata.get("price")
             })
 
