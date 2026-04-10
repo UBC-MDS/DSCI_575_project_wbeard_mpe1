@@ -3,6 +3,7 @@
 # Standard imports
 from pathlib import Path
 import sys
+import os
 
 sys.path.insert(0, str(Path(__file__).parent))
 
@@ -21,60 +22,36 @@ from shinywidgets import render_altair, output_widget
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-# CSV = "data/processed/processed_data.csv"
-# OUT = "data/processed/processed_data.parquet"
+from langchain_community.retrievers import BM25Retriever
+from langchain_core.documents import Document
 
-# duckdb.execute(
-#     f"""
-#     COPY (SELECT * FROM read_csv_auto('{CSV}'))
-#     TO '{OUT}' (FORMAT PARQUET)
-#     """
-# )
+import pickle
 
-# con = ibis.duckdb.connect()
-# raw_data = con.read_parquet("data/processed/processed_data.parquet")
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-dummy_data = pd.DataFrame({
-    "Title": [
-        "1984",
-        "To Kill a Mockingbird",
-        "The Great Gatsby",
-        "Pride and Prejudice",
-        "The Catcher in the Rye",
-        "The Hobbit",
-        "Fahrenheit 451",
-        "Moby-Dick",
-        "The Alchemist",
-        "Brave New World"
-    ],
-    "Author": [
-        "George Orwell",
-        "Harper Lee",
-        "F. Scott Fitzgerald",
-        "Jane Austen",
-        "J.D. Salinger",
-        "J.R.R. Tolkien",
-        "Ray Bradbury",
-        "Herman Melville",
-        "Paulo Coelho",
-        "Aldous Huxley"
-    ],
-    "Year": [1949, 1960, 1925, 1813, 1951, 1937, 1953, 1851, 1988, 1932],
-    "Rating": [4.2, 4.3, 3.9, 4.4, 3.8, 4.7, 4.1, 3.5, 3.9, 4.0],
-    "Genre": [
-        "Dystopian",
-        "Classic",
-        "Classic",
-        "Romance",
-        "Classic",
-        "Fantasy",
-        "Dystopian",
-        "Adventure",
-        "Philosophical",
-        "Dystopian"
-    ],
-    "Price": [9.99, 14.99, 10.99, 8.99, 12.50, 15.75, 11.25, 13.40, 16.00, 14.20]
-})
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+
+nltk.download('punkt')
+nltk.download('stopwords')
+
+stop_words = set(stopwords.words('english'))
+
+def preprocess(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    tokens = word_tokenize(text)
+    return [t for t in tokens if t not in stop_words and len(t) > 2]
+
+
+with open('data/processed/retriever.pkl', 'rb') as file:
+    retriever = pickle.load(file)
+
 
 FOOTER = ui.p(
     "Good Books Dashboard"
@@ -108,30 +85,22 @@ app_ui = ui.page_navbar(
     ui.nav_panel(
         "About",
         ui.layout_columns(
-            ui.card("Place holder"),
+            ui.card(ui.output_text(("search_results"))),
             fill=False,
         ),
     ),
     sidebar=ui.sidebar(
         ui.help_text("Welcome to the Find Good Books Dashboard."),
-        ui.input_radio_buttons(
-            "model",
-            "Model",
-            choices=[
-                "BM25",
-                "Semantic"
-            ],
-            selected="Key-word",
+        ui.input_text("search", "", placeholder="Enter Search"),
+        ui.layout_columns(
+            ui.input_action_button("keyword", "Key-Word Search", disabled=True),
+            ui.input_action_button("semantic", "Semantic Search", disabled=True),
         ),
-        ui.input_text("query", "Search"),
-        ui.input_action_button("sparse", "Sparse Search", disabled=True),
-        ui.input_action_button("dense", "Dense Search", disabled=True),
-        ui.output_ui("query_submit"),
-        ui.chat_ui(
-            "chat",
-            messages=["Let's find your next read!"],
-            placeholder="Search"
-        ),
+        # ui.chat_ui(
+        #     "chat",
+        #     messages=["Let's find your next read!"],
+        #     placeholder="Search"
+        # ),
         width=400
     ),
     id="tabs",
@@ -143,27 +112,49 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
 
     @reactive.effect
-    @reactive.event(input.query)
+    @reactive.event(input.search)
     def set_button_state():
-        if input.query():
-            ui.update_action_button("sparse", disabled=False)
-            ui.update_action_button("dense", disabled=False)
+        if input.search():
+            ui.update_action_button("keyword", disabled=False)
+            ui.update_action_button("semantic", disabled=False)
         else:
-            ui.update_action_button("sparse", disabled=True)
-            ui.update_action_button("dense", disabled=True)
+            ui.update_action_button("keyword", disabled=True)
+            ui.update_action_button("semantic", disabled=True)
 
-    @render.ui
-    @reactive.event(input.query)
-    def query_submit():
-        return ui.p(f"Your question, {input.query()}!",)
+    @reactive.calc
+    @reactive.event(input.keyword)
+    def search_results():
+        query = input.search()
+        req(query)
+        return retriever.invoke(query)
+
 
     @reactive.calc()
+    @reactive.event(input.keyword)
     def data_results():
-        return dummy_data
+        documents = search_results()
+
+        rows = []
+        for doc in documents:
+            rows.append({
+                "Title": doc.metadata.get("title"),
+                "Author": doc.metadata.get("author"),
+                "Categories": doc.metadata.get("categories"),
+                "Average Rating": doc.metadata.get("average_rating"),
+                "Review": doc.metadata.get("individual_review")[:200],
+                "Price": doc.metadata.get("price")
+            })
+
+        return pd.DataFrame(rows)
 
     @render.text
     def avg_rating():
-        return data_results()["Rating"].mean()
+        df = data_results()
+
+        max_avg_rating = df["Average Rating"].max()
+        min_avg_rating = df["Average Rating"].min()
+
+        return f"{min_avg_rating} - {max_avg_rating}"
 
     @render.text
     def book_count():
@@ -180,7 +171,9 @@ def server(input, output, session):
 
     @render.data_frame
     def data():
-        return dummy_data
+        df = data_results()
+
+        return df
 
 
 app = App(app_ui, server)
