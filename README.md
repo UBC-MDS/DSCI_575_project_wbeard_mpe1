@@ -4,6 +4,8 @@
 
 ## About
 
+- explanation about the subset of data we are using
+
 ## Application
 
 - web app link
