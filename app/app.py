@@ -84,7 +84,7 @@ app_ui = ui.page_navbar(
         width=400
     ),
     id="tabs",
-    title="Find Good Books",
+    title="Find Good Books Dashboard",
     fillable=True,
 )
 
@@ -109,7 +109,7 @@ def server(input, output, session):
         return retriever.invoke(query)
 
 
-    @reactive.calc()
+    @reactive.calc
     @reactive.event(input.keyword)
     def data_results():
         documents = search_results()
