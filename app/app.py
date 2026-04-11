@@ -27,37 +27,16 @@ from langchain_core.documents import Document
 
 import pickle
 
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
-import re
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-
-nltk.download('punkt')
-nltk.download('stopwords')
-
-stop_words = set(stopwords.words('english'))
-
-def preprocess(text):
-    text = text.lower()
-    text = re.sub(r'[^a-z0-9\s]', ' ', text)
-    tokens = word_tokenize(text)
-    return [t for t in tokens if t not in stop_words and len(t) > 2]
-
+from preprocess import preprocess
 
 with open('data/processed/retriever.pkl', 'rb') as file:
     retriever = pickle.load(file)
 
-
 FOOTER = ui.p(
-    "Good Books Dashboard"
-    " | Authors: Michael Wesley Beard |"
-    " Repository: https://github.ubc.ca/mds-2025-26/DSCI_575_project_wbeard_mpe1 |"
-    " Last updated: 2026-04-07",
+    "Find Good Books Dashboard"
+    " | Authors: Michael Eirikson & Wesley Beard |"
+    " Repository: https://github.ubc.ca/UBC-MDS/DSCI_575_project_wbeard_mpe1 |"
+    " Last updated: 2026-04-12",
     class_="text-center text-muted",
 )
 
@@ -81,6 +60,7 @@ app_ui = ui.page_navbar(
             fill=False,
         ),
         ui.card(ui.output_data_frame("data")),
+        FOOTER
     ),
     ui.nav_panel(
         "About",
@@ -104,7 +84,7 @@ app_ui = ui.page_navbar(
         width=400
     ),
     id="tabs",
-    title="Find Good Books",
+    title="Find Good Books Dashboard",
     fillable=True,
 )
 
@@ -129,7 +109,7 @@ def server(input, output, session):
         return retriever.invoke(query)
 
 
-    @reactive.calc()
+    @reactive.calc
     @reactive.event(input.keyword)
     def data_results():
         documents = search_results()
