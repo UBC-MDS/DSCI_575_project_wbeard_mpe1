@@ -12,7 +12,7 @@ from preprocess import preprocess
 
 c2 = duckdb.connect()
 
-df = c2.execute("SELECT * FROM read_parquet('data/processed/merged.parquet')").df()
+df = c2.execute("SELECT * FROM read_parquet('data/processed/merged.parquet') WHERE rating_order = 1").df()
 df = df.fillna("")
 
 # create documents
