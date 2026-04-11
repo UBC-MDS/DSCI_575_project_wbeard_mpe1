@@ -64,7 +64,11 @@ con.execute("""
             meta.price, 
             reviews.text AS individual_review,
             reviews.rating AS individual_rating,
-            reviews.asin
+            reviews.asin,
+            ROW_NUMBER() OVER (
+                PARTITION BY meta.parent_asin
+                ORDER BY reviews.rating DESC
+            ) as rating_order
         FROM "data/raw/top_meta_Books.parquet" AS meta
         LEFT JOIN "data/raw/top_Books.parquet" AS reviews
         ON meta.parent_asin = reviews.asin
