@@ -1,13 +1,15 @@
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 
-#from preprocess import preprocess
+from preprocess import preprocess_without_using_stopwords
 
 # Standard imports
 from pathlib import Path
 import sys
 import os
 import pickle
+
+import numpy as np
 
 # Third-party imports
 from dotenv import load_dotenv
@@ -56,24 +58,32 @@ queries_complex = [
 
 """Get top results for BM25 and semantic search"""
 
-for query in queries_complex:
-    results = retriever.invoke(query)
+for query in queries_medium:
+
+    tokenized_query = preprocess_without_using_stopwords(query)
+    scores = np.sort(retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
+    documents = retriever.invoke(query)
+
+    results = zip(documents, scores)
+    # results = retriever.invoke(query)
     print("=" * 80)
     print(f"QUERY: {query}\n")
 
     # keyword search
     print("BM25 Top Results:\n")
-    for i, doc in enumerate(results, 1):
-        print(f"""{i}. Title: {doc.metadata.get("title")}
+    for i, (doc, scores) in enumerate(results, 1):
+        print(f"""{i}. Score: {scores:.3f}
+Title: {doc.metadata.get("title")}
 Author: {doc.metadata.get("author")}
 Details: {doc.metadata.get("book_details")[:100]}
 """)
 
     # semantic search
-    results_s = vector_store.similarity_search(query, k=5)
+    results_s = vector_store.similarity_search_with_score(query, k=5)
     print("Semantic Top Results:\n")
-    for i, doc in enumerate(results_s, 1):
-        print(f"""{i}. Title: {doc.metadata.get("title")}
+    for i, (doc, score) in enumerate(results_s, 1):
+        print(f"""{i}. Score: {score:.3f}
+Title: {doc.metadata.get("title")}
 Author: {doc.metadata.get("author")}
 Details: {doc.metadata.get("book_details")[:100]}
 """)
