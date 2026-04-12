@@ -19,7 +19,7 @@ if not Path("data/raw/meta_Books.parquet").is_file():
         print("Do you have the file 'data/raw/met_Books.jsonl.gz'?")
 
 # get top books
-n_books = 5000
+n_books = 10000
 
 con.execute(f"""
 CREATE TEMP TABLE top_books AS
