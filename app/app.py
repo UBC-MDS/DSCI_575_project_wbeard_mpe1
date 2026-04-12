@@ -9,8 +9,11 @@ import pickle
 # Third-party imports
 from dotenv import load_dotenv
 import pandas as pd
+import numpy as np
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+
+from preprocess import preprocess_without_using_stopwords
 
 # Shiny-related imports
 from shiny import App, render, ui, reactive, req
@@ -128,7 +131,10 @@ def server(input, output, session):
         req(query)
 
         if search_type.get() == "keyword":
-            return retriever.invoke(query)
+            tokenized_query = preprocess_without_using_stopwords(query)
+            scores = np.sort(retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
+            documents = retriever.invoke(query)
+            return zip(documents, scores)
         elif search_type.get() == "semantic":
             return vector_store.similarity_search_with_score(query, k=5)
 
@@ -139,29 +145,17 @@ def server(input, output, session):
     def data_results():
         documents = search_results()
 
-        if search_type.get() == "keyword":
-            rows = []
-            for doc in documents:
-                rows.append({
-                    "Title": doc.metadata.get("title"),
-                    "Author": doc.metadata.get("author"),
-                    "Categories": doc.metadata.get("categories"),
-                    "Average Rating": doc.metadata.get("average_rating"),
-                    "Review": doc.metadata.get("individual_review")[:200],
-                    "Price": doc.metadata.get("price")
-                })
-        elif search_type.get() == "semantic":
-            rows = []
-            for doc, score in documents:
-                rows.append({
-                    "Title": doc.metadata.get("title"),
-                    "Author": doc.metadata.get("author"),
-                    "Categories": doc.metadata.get("categories"),
-                    "Average Rating": doc.metadata.get("average_rating"),
-                    "Review": doc.metadata.get("individual_review")[:200],
-                    "Price": doc.metadata.get("price"),
-                    "Search Score": f"{score:.3f}"
-                })
+        rows = []
+        for doc, score in documents:
+            rows.append({
+                "Title": doc.metadata.get("title"),
+                "Author": doc.metadata.get("author"),
+                "Categories": doc.metadata.get("categories"),
+                "Average Rating": doc.metadata.get("average_rating"),
+                "Review": doc.metadata.get("individual_review")[:200],
+                "Price": doc.metadata.get("price"),
+                "Search Score": f"{score:.3f}"
+            })
 
         return pd.DataFrame(rows)
 
