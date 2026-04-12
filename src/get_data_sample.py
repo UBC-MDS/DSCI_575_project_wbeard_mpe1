@@ -2,7 +2,6 @@ from pathlib import Path
 import duckdb
 
 con = duckdb.connect()
-n_books = 100
 
 # Convert full files to parquet
 
