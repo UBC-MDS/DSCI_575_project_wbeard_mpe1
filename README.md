@@ -11,6 +11,8 @@
 
 This dashboard uses a **sample** of books from Amazon's millions of book reviews. The user will be able to search these books using two different types of search systems: key-word- and/or semantic-based.
 
+**Note:** Scripts to create our BM25 and FAISS systems are in one script-`search-systems.py`-rather than individual ones. This is because we created a single object of documents, and subsequently, used it in creating our BM25 retriever and the FAISS vector store in one go.
+
 **Github Repo:** <https://github.com/UBC-MDS/DSCI_575_project_wbeard_mpe1>
 
 ## Setup {#setup}
