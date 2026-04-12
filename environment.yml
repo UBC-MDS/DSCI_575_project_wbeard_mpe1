@@ -10,9 +10,14 @@ dependencies:
   - langchain
   - nltk
   - shiny
+  - faiss-cpu
   - pip
   - pip:
     - dotenv
     - rank_bm25
     - langchain_community
     - langchain_huggingface
+    - sentence_transformers
+
+
+    
