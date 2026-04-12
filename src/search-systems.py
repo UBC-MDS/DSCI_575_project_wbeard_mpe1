@@ -41,7 +41,8 @@ for _, row in df.iterrows():
                 "total_ratings": row["rating_number"],
                 "individual_review": row["individual_review"],
                 "individual_rating": row["individual_rating"],
-                "price": row["price"]
+                "price": row["price"],
+                "book_details": row["book_details"]
             }
         )
     )
