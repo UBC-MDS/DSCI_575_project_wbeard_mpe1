@@ -33,12 +33,21 @@ conda env create -f environment.yml
 conda activate find-good-books
 ```
 
-**Note:** throughtout running this project, if you run into issues with importing `nltk`, additional downloads/updates may be required.
+**Note:** throughout running this project, if you run into issues with importing `nltk`, additional downloads/updates may be required.
 
 ``` bash
 nltk.download('punkt')
 nltk.download('stopwords')
 ```
+
+### 3) Create HuggingFace API key
+
+1. Create HuggingFace account: <https://huggingface.co/login>
+2. Click on user icon (top right) and select access tokens.
+3. Click create new token button (top right).
+4. Token type: "Read"
+5. Create token.
+6. Save token in `.env`: HUGGINGFACEHUB_API_TOKEN="your_api_key_here", see `.env.sample`
 
 ## Our Data {#data}
 
