@@ -69,5 +69,4 @@ vector_store = FAISS.from_documents(documents, embeddings)
 with open('data/processed/retriever.pkl', 'wb') as file:
     pickle.dump(retriever, file)
 
-with open('data/processed/vector_store.pkl', 'wb') as file:
-    pickle.dump(vector_store, file)
+vector_store.save_local("data/processed/faiss_index")
