@@ -5,10 +5,14 @@ import pandas as pd
 
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
-
-import pickle
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
 
 from preprocess import preprocess
+from dotenv import load_dotenv
+import os
+import pickle
+
 
 c2 = duckdb.connect()
 
@@ -50,10 +54,19 @@ retriever = BM25Retriever.from_documents(
     preprocess_func=preprocess
 )
 
-# TODO: semantic search system
+# semantic search system
 
+load_dotenv()
+hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+vector_store = FAISS.from_documents(documents, embeddings)
 
 # save search systems
 
 with open('data/processed/retriever.pkl', 'wb') as file:
     pickle.dump(retriever, file)
+
+vector_store.save_local("data/processed/faiss_index")

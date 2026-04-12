@@ -40,6 +40,8 @@ dependencies:
   - pip
   - duckdb
   - pyarrow
+  - sentence-transformers
+  - shiny
   - pip:
     - torch-summary
     - otter-grader
@@ -60,3 +62,4 @@ dependencies:
     - langchain-mcp-adapters
     - langchain-text-splitters
     - pypdf
+    - rank_bm25
