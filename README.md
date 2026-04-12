@@ -99,6 +99,21 @@ Enter your search query into the input field and select the search type you woul
 
 ![Here is a demo of the dashboard:](img/demo.gif)
 
+### Retrieval workflows
+
+For both workflow we first create a list of `langchain` `Documents` which contain the book meta data and the text to be searched (author, title, description, etc)
+
+#### Keyword search (BM25)
+
+A preprocessor is created for the text to be used in keyword search. This preprocessor with lowercase the text, remove all non-alphanumeric characters, and remove common english stopwords.
+
+The `Documents` data and preprocessor are then passed into a `langchain` `BM25Retriever` object and the retriever is saved. The shiny app then load the retriever and passes in the user query.
+
+#### Semantic search (FAISS)
+
+A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
+
+The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the vector store is saved. The shiny app then load the vector store and import the embedding to be able to process the user query.
 ## License
 
 MIT
