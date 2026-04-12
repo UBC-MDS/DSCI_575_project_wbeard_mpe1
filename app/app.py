@@ -130,7 +130,7 @@ def server(input, output, session):
         if search_type.get() == "keyword":
             return retriever.invoke(query)
         elif search_type.get() == "semantic":
-            return vector_store.similarity_search(query, k=5)
+            return vector_store.similarity_search_with_score(query, k=5)
 
     # display search results
 
@@ -139,16 +139,29 @@ def server(input, output, session):
     def data_results():
         documents = search_results()
 
-        rows = []
-        for doc in documents:
-            rows.append({
-                "Title": doc.metadata.get("title"),
-                "Author": doc.metadata.get("author"),
-                "Categories": doc.metadata.get("categories"),
-                "Average Rating": doc.metadata.get("average_rating"),
-                "Review": doc.metadata.get("individual_review")[:200],
-                "Price": doc.metadata.get("price")
-            })
+        if search_type.get() == "keyword":
+            rows = []
+            for doc in documents:
+                rows.append({
+                    "Title": doc.metadata.get("title"),
+                    "Author": doc.metadata.get("author"),
+                    "Categories": doc.metadata.get("categories"),
+                    "Average Rating": doc.metadata.get("average_rating"),
+                    "Review": doc.metadata.get("individual_review")[:200],
+                    "Price": doc.metadata.get("price")
+                })
+        elif search_type.get() == "semantic":
+            rows = []
+            for doc, score in documents:
+                rows.append({
+                    "Title": doc.metadata.get("title"),
+                    "Author": doc.metadata.get("author"),
+                    "Categories": doc.metadata.get("categories"),
+                    "Average Rating": doc.metadata.get("average_rating"),
+                    "Review": doc.metadata.get("individual_review")[:200],
+                    "Price": doc.metadata.get("price"),
+                    "Search Score": f"{score:.3f}"
+                })
 
         return pd.DataFrame(rows)
 
