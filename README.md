@@ -57,6 +57,8 @@ A sample from Amazon's "Books" reviews. Source: [Reviews and Meta Data](https://
 
 **Note:** these are very large files. To prevent having every individual download them to run our project, we have pre-sampled data from both the "review" and "meta" datasets. The two results were then joined and turned into a parquet file: `data/processed/merged.parquet`. This was done locally and then pushed to the repository, providing ease of use for anyone running this project. If you would like to see how we did this, please read the instructions below.
 
+The data consists of meta data for each book: author, title, description, genre, overall rating, number of ratings and price. There is also review level data for each book: review text, rating
+
 ### 1) Download the raw data
 
 Follow the "Source" link above and download both files for the "Books" category. Unzip the files and place in the `data/raw` folder of this project, locally.
