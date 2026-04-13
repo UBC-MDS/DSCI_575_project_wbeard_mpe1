@@ -39,6 +39,10 @@ vector_store = FAISS.load_local(
 
 # shiny app
 
+HELP_TEXT = "Welcome to the Find Good Books Dashboard. " \
+    "Type in your query and select either of the search types to display the top results. " \
+    "Once you've tried one system, click the other button to try the other!"
+
 FOOTER = ui.p(
     "Find Good Books Dashboard"
     " | Authors: Michael Eirikson & Wesley Beard |"
@@ -69,15 +73,16 @@ app_ui = ui.page_navbar(
         ui.card(ui.output_data_frame("data")),
         FOOTER
     ),
-    ui.nav_panel(
-        "About",
-        ui.layout_columns(
-            ui.card(ui.output_text(("search_results"))),
-            fill=False,
-        ),
-    ),
+    # TODO: update if we want this
+    # ui.nav_panel(
+    #     "About",
+    #     ui.layout_columns(
+    #         ui.card(ui.output_text(("search_results"))),
+    #         fill=False,
+    #     ),
+    # ),
     sidebar=ui.sidebar(
-        ui.help_text("Welcome to the Find Good Books Dashboard."),
+        ui.help_text(HELP_TEXT),
         ui.input_text("search", "", placeholder="Enter Search"),
         ui.layout_columns(
             ui.input_action_button("keyword", "Key-Word Search", disabled=True),
