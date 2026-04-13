@@ -53,6 +53,10 @@ nltk.download('stopwords')
 5. Create token.
 6. Save token in `.env`: HUGGINGFACEHUB_API_TOKEN="your_api_key_here", see `.env.sample`
 
+### 4) Download and process data
+
+See data section.
+
 ## Data
 
 A sample from Amazon's "Books" reviews. Source: [Reviews and Meta Data](https://amazon-reviews-2023.github.io/)
@@ -103,11 +107,11 @@ Enter your search query into the input field and select the search type you woul
 
 ### Retrieval workflows
 
-For both workflow we first create a list of `langchain` `Documents` which contain the book meta data and the text to be searched (author, title, description, etc)
+For both workflows, first a list of `langchain` `Documents` is created which contain the book meta data and the text to be searched (author, title, description, etc)
 
 #### Keyword search (BM25)
 
-A preprocessor is created for the text to be used in keyword search. This preprocessor with lowercase the text, remove all non-alphanumeric characters, and remove common english stopwords.
+A preprocessor is created for the text to be used in keyword search. This preprocessor has the following steps: lowercase the text, remove all non-alphanumeric characters, and remove common english stopwords.
 
 The `Documents` data and preprocessor are then passed into a `langchain` `BM25Retriever` object and the retriever is saved. The shiny app then load the retriever and passes in the user query.
 
@@ -115,7 +119,7 @@ The `Documents` data and preprocessor are then passed into a `langchain` `BM25Re
 
 A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
 
-The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the vector store is saved. The shiny app then load the vector store and import the embedding to be able to process the user query.
+The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the resulting vector store is saved. The shiny app then loads the vector store and imports the embedding to be able to process the user query.
 
 ## License
 
