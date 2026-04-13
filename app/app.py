@@ -3,84 +3,51 @@
 # Standard imports
 from pathlib import Path
 import sys
-
-sys.path.insert(0, str(Path(__file__).parent))
+import os
+import pickle
 
 # Third-party imports
 from dotenv import load_dotenv
-import duckdb
-import ibis
-from ibis import _
-import numpy as np
 import pandas as pd
+import numpy as np
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
+
+from preprocess import preprocess_without_using_stopwords
 
 # Shiny-related imports
 from shiny import App, render, ui, reactive, req
-from shinywidgets import render_altair, output_widget
 
-
+# Some setup
+sys.path.insert(0, str(Path(__file__).parent))
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-# CSV = "data/processed/processed_data.csv"
-# OUT = "data/processed/processed_data.parquet"
+# load keyword search retriever
+with open('data/processed/retriever.pkl', 'rb') as file:
+    retriever = pickle.load(file)
 
-# duckdb.execute(
-#     f"""
-#     COPY (SELECT * FROM read_csv_auto('{CSV}'))
-#     TO '{OUT}' (FORMAT PARQUET)
-#     """
-# )
+# load semantic search index
+hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-MiniLM-L6-v2"
+)
+vector_store = FAISS.load_local(
+    "data/processed/faiss_index",
+    embeddings,
+    allow_dangerous_deserialization=True
+)
 
-# con = ibis.duckdb.connect()
-# raw_data = con.read_parquet("data/processed/processed_data.parquet")
+# shiny app
 
-dummy_data = pd.DataFrame({
-    "Title": [
-        "1984",
-        "To Kill a Mockingbird",
-        "The Great Gatsby",
-        "Pride and Prejudice",
-        "The Catcher in the Rye",
-        "The Hobbit",
-        "Fahrenheit 451",
-        "Moby-Dick",
-        "The Alchemist",
-        "Brave New World"
-    ],
-    "Author": [
-        "George Orwell",
-        "Harper Lee",
-        "F. Scott Fitzgerald",
-        "Jane Austen",
-        "J.D. Salinger",
-        "J.R.R. Tolkien",
-        "Ray Bradbury",
-        "Herman Melville",
-        "Paulo Coelho",
-        "Aldous Huxley"
-    ],
-    "Year": [1949, 1960, 1925, 1813, 1951, 1937, 1953, 1851, 1988, 1932],
-    "Rating": [4.2, 4.3, 3.9, 4.4, 3.8, 4.7, 4.1, 3.5, 3.9, 4.0],
-    "Genre": [
-        "Dystopian",
-        "Classic",
-        "Classic",
-        "Romance",
-        "Classic",
-        "Fantasy",
-        "Dystopian",
-        "Adventure",
-        "Philosophical",
-        "Dystopian"
-    ],
-    "Price": [9.99, 14.99, 10.99, 8.99, 12.50, 15.75, 11.25, 13.40, 16.00, 14.20]
-})
+HELP_TEXT = "Welcome to the Find Good Books Dashboard. " \
+    "Type in your query and select either of the search types to display the top results. " \
+    "Once you've tried one system, click the other button to try the other!"
 
 FOOTER = ui.p(
-    "Good Books Dashboard"
-    " | Authors: Michael Wesley Beard |"
-    " Repository: https://github.ubc.ca/mds-2025-26/DSCI_575_project_wbeard_mpe1 |"
-    " Last updated: 2026-04-07",
+    "Find Good Books Dashboard"
+    " | Authors: Michael Eirikson & Wesley Beard |"
+    " Repository: https://github.ubc.ca/UBC-MDS/DSCI_575_project_wbeard_mpe1 |"
+    " Last updated: 2026-04-12",
     class_="text-center text-muted",
 )
 
@@ -104,38 +71,32 @@ app_ui = ui.page_navbar(
             fill=False,
         ),
         ui.card(ui.output_data_frame("data")),
+        FOOTER
     ),
-    ui.nav_panel(
-        "About",
-        ui.layout_columns(
-            ui.card("Place holder"),
-            fill=False,
-        ),
-    ),
+    # TODO: update if we want this
+    # ui.nav_panel(
+    #     "About",
+    #     ui.layout_columns(
+    #         ui.card(ui.output_text(("search_results"))),
+    #         fill=False,
+    #     ),
+    # ),
     sidebar=ui.sidebar(
-        ui.help_text("Welcome to the Find Good Books Dashboard."),
-        ui.input_radio_buttons(
-            "model",
-            "Model",
-            choices=[
-                "BM25",
-                "Semantic"
-            ],
-            selected="Key-word",
+        ui.help_text(HELP_TEXT),
+        ui.input_text("search", "", placeholder="Enter Search"),
+        ui.layout_columns(
+            ui.input_action_button("keyword", "Key-Word Search", disabled=True),
+            ui.input_action_button("semantic", "Semantic Search", disabled=True),
         ),
-        ui.input_text("query", "Search"),
-        ui.input_action_button("sparse", "Sparse Search", disabled=True),
-        ui.input_action_button("dense", "Dense Search", disabled=True),
-        ui.output_ui("query_submit"),
-        ui.chat_ui(
-            "chat",
-            messages=["Let's find your next read!"],
-            placeholder="Search"
-        ),
+        # ui.chat_ui(
+        #     "chat",
+        #     messages=["Let's find your next read!"],
+        #     placeholder="Search"
+        # ),
         width=400
     ),
     id="tabs",
-    title="Find Good Books",
+    title="Find Good Books Dashboard",
     fillable=True,
 )
 
@@ -143,27 +104,74 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
 
     @reactive.effect
-    @reactive.event(input.query)
+    @reactive.event(input.search)
     def set_button_state():
-        if input.query():
-            ui.update_action_button("sparse", disabled=False)
-            ui.update_action_button("dense", disabled=False)
+        if input.search():
+            ui.update_action_button("keyword", disabled=False)
+            ui.update_action_button("semantic", disabled=False)
         else:
-            ui.update_action_button("sparse", disabled=True)
-            ui.update_action_button("dense", disabled=True)
+            ui.update_action_button("keyword", disabled=True)
+            ui.update_action_button("semantic", disabled=True)
 
-    @render.ui
-    @reactive.event(input.query)
-    def query_submit():
-        return ui.p(f"Your question, {input.query()}!",)
+    # track which button was just pressed
 
-    @reactive.calc()
+    search_type = reactive.Value(None)
+
+    @reactive.effect
+    @reactive.event(input.keyword)
+    def _():
+        search_type.set("keyword")
+
+    @reactive.effect
+    @reactive.event(input.semantic)
+    def _():
+        search_type.set("semantic")
+
+    # perform search
+
+    @reactive.calc
+    @reactive.event(input.keyword, input.semantic)
+    def search_results():
+        query = input.search()
+        req(query)
+
+        if search_type.get() == "keyword":
+            tokenized_query = preprocess_without_using_stopwords(query)
+            scores = np.sort(retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
+            documents = retriever.invoke(query)
+            return zip(documents, scores)
+        elif search_type.get() == "semantic":
+            return vector_store.similarity_search_with_score(query, k=5)
+
+    # display search results
+
+    @reactive.calc
+    @reactive.event(input.keyword, input.semantic)
     def data_results():
-        return dummy_data
+        documents = search_results()
+
+        rows = []
+        for doc, score in documents:
+            rows.append({
+                "Title": doc.metadata.get("title"),
+                "Author": doc.metadata.get("author"),
+                "Categories": doc.metadata.get("categories"),
+                "Average Rating": doc.metadata.get("average_rating"),
+                "Review": doc.metadata.get("individual_review")[:200],
+                "Price": doc.metadata.get("price"),
+                "Search Score": f"{score:.3f}"
+            })
+
+        return pd.DataFrame(rows)
 
     @render.text
     def avg_rating():
-        return data_results()["Rating"].mean()
+        df = data_results()
+
+        max_avg_rating = df["Average Rating"].max()
+        min_avg_rating = df["Average Rating"].min()
+
+        return f"{min_avg_rating} - {max_avg_rating}"
 
     @render.text
     def book_count():
@@ -180,7 +188,9 @@ def server(input, output, session):
 
     @render.data_frame
     def data():
-        return dummy_data
+        df = data_results()
+
+        return df
 
 
 app = App(app_ui, server)
