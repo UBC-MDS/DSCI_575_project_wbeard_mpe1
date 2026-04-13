@@ -4,10 +4,12 @@
 
 - [About](#about)
 - [Setup](#setup)
-- [Our Data](#data)
+- [Data](#data)
 - [Dashboard](#dashboard)
+- [License](#license)
+- [Contributors](#contributors)
 
-## About {#about}
+## About
 
 This dashboard uses a **sample** of books from Amazon's millions of book reviews. The user will be able to search these books using two different types of search systems: key-word- and/or semantic-based.
 
@@ -15,7 +17,7 @@ This dashboard uses a **sample** of books from Amazon's millions of book reviews
 
 **Github Repo:** <https://github.com/UBC-MDS/DSCI_575_project_wbeard_mpe1>
 
-## Setup {#setup}
+## Setup
 
 ### 1) Download the repository
 
@@ -51,7 +53,7 @@ nltk.download('stopwords')
 5. Create token.
 6. Save token in `.env`: HUGGINGFACEHUB_API_TOKEN="your_api_key_here", see `.env.sample`
 
-## Our Data {#data}
+## Data
 
 A sample from Amazon's "Books" reviews. Source: [Reviews and Meta Data](https://amazon-reviews-2023.github.io/)
 
@@ -79,7 +81,7 @@ Since this changes the sample book data, both the key-word and semantic search s
 python src/search-systems.py
 ```
 
-## Dashboard {#dashboard}
+## Dashboard
 
 Our dashboard is a Shiny for Python app. Currently, our repository is set to private which prevents it from being hosted on Posit Connect Cloud. To run our app and interact with it, please make sure you have followed the [Setup](#setup) instructions and ensure you have the correct environment activated. Once you have done that, proceed.
 
@@ -114,11 +116,12 @@ The `Documents` data and preprocessor are then passed into a `langchain` `BM25Re
 A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
 
 The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the vector store is saved. The shiny app then load the vector store and import the embedding to be able to process the user query.
+
 ## License
 
-MIT
+MIT license, see `LICENSE`
 
-### Main Contributors
+## Contributors
 
 - Michael Eirikson
 - Wesley Beard
