@@ -13,6 +13,8 @@ import numpy as np
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
+path_to_src = "src/"
+sys.path.insert(0, path_to_src)
 from preprocess import preprocess_without_using_stopwords
 
 # Shiny-related imports
