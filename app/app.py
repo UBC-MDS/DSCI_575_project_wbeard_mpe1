@@ -56,44 +56,44 @@ app_ui = ui.page_navbar(
     ui.nav_panel(
         "Search Results",
         ui.layout_columns(
-            ui.value_box(
-                title="Price Range",
-                value=ui.output_text("price_range"),
+        ui.card(
+            ui.navset_tab(
+                ui.nav_panel("Search",
+                    ui.help_text(HELP_TEXT),
+                    ui.div(style="margin-top: 12px;"),
+                    ui.input_text("search", "", placeholder="Enter Search"),
+                    ui.layout_columns(
+                        ui.input_action_button("keyword", "Key-Word Search", disabled=True),
+                        ui.input_action_button("semantic", "Semantic Search", disabled=True),
+                    ),
+                ),
+                ui.nav_panel("Chat",
+                    ui.chat_ui("chat"), 
+                ),
             ),
-            ui.value_box(
-                title="Average Rating",
-                value=ui.output_text("avg_rating")
-            ),
-            ui.value_box(
-                title="Total Results",
-                value=ui.output_text("book_count")
-            ),
-            fill=False,
         ),
+        ui.card(
+            ui.layout_columns(
+                ui.value_box(
+                    title="Price Range",
+                    value=ui.output_text("price_range"),
+                ),
+                ui.value_box(
+                    title="Average Rating",
+                    value=ui.output_text("avg_rating")
+                ),
+                ui.value_box(
+                    title="Total Results",
+                    value=ui.output_text("book_count")
+                ),
+                fill=False,
+            ),
         ui.card(ui.output_data_frame("data")),
-        FOOTER
-    ),
-    # TODO: update if we want this
-    # ui.nav_panel(
-    #     "About",
-    #     ui.layout_columns(
-    #         ui.card(ui.output_text(("search_results"))),
-    #         fill=False,
-    #     ),
-    # ),
-    sidebar=ui.sidebar(
-        ui.help_text(HELP_TEXT),
-        ui.input_text("search", "", placeholder="Enter Search"),
-        ui.layout_columns(
-            ui.input_action_button("keyword", "Key-Word Search", disabled=True),
-            ui.input_action_button("semantic", "Semantic Search", disabled=True),
+        # FOOTER,
         ),
-        # ui.chat_ui(
-        #     "chat",
-        #     messages=["Let's find your next read!"],
-        #     placeholder="Search"
-        # ),
-        width=400
+        col_widths=(3, 9),
+    ),
+    FOOTER,
     ),
     id="tabs",
     title="Find Good Books Dashboard",
@@ -191,6 +191,12 @@ def server(input, output, session):
         df = data_results()
 
         return df
+    
+    chat = ui.Chat(id="chat")  
+
+    @chat.on_user_submit  
+    async def handle_user_input(user_input: str):  
+        await chat.append_message(f"You said: {user_input}") # REPLACE THIS
 
 
 app = App(app_ui, server)
