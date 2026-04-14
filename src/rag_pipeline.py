@@ -5,7 +5,7 @@ import pickle
 
 from dotenv import load_dotenv
 
-from langchain_classic.retrievers import EnsembleRetriever
+# from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEmbeddings
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
@@ -13,7 +13,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 
 load_dotenv()
-# hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 llm_endpoint = HuggingFaceEndpoint(
     repo_id="meta-llama/Meta-Llama-3-8B-Instruct",
@@ -26,29 +26,29 @@ llm = ChatHuggingFace(llm=llm_endpoint)
 
 #print(llm.invoke("Michael is "))
 
-embeddings = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2"
-)
+# embeddings = HuggingFaceEmbeddings(
+#     model_name="sentence-transformers/all-MiniLM-L6-v2"
+# )
 
-vector_store = FAISS.load_local(
-    "data/processed/faiss_index",
-    embeddings,
-    allow_dangerous_deserialization=True
-)
+# vector_store = FAISS.load_local(
+#     "data/processed/faiss_index",
+#     embeddings,
+#     allow_dangerous_deserialization=True
+# )
 
-semantic_retriever = vector_store.as_retriever(
-    search_type="similarity",
-    search_kwargs={"k": 5}
-)
+# semantic_retriever = vector_store.as_retriever(
+#     search_type="similarity",
+#     search_kwargs={"k": 5}
+# )
 
-# load keyword search retriever
-with open('data/processed/retriever.pkl', 'rb') as file:
-    bm25_retriever = pickle.load(file)
+# # load keyword search retriever
+# with open('data/processed/retriever.pkl', 'rb') as file:
+#     bm25_retriever = pickle.load(file)
 
-ensemble_retriever = EnsembleRetriever(
-    retrievers=[bm25_retriever, semantic_retriever],
-    weights=[0.2, 0.8]  # Example: asigning 40% importance to BM25, 60% to Semantic Search
-)
+# ensemble_retriever = EnsembleRetriever(
+#     retrievers=[bm25_retriever, semantic_retriever],
+#     weights=[0.2, 0.8]  # Example: asigning 40% importance to BM25, 60% to Semantic Search
+# )
 
 def build_context(docs):
     """Prompt-ready context block"""

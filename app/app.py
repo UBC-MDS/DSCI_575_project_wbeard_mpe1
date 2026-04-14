@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_classic.retrievers import EnsembleRetriever
 
 path_to_src = "src/"
 sys.path.insert(0, path_to_src)
@@ -22,12 +23,9 @@ from rag_pipeline import get_rag_response
 from shiny import App, render, ui, reactive, req
 
 # Some setup
-sys.path.insert(0, str(Path(__file__).parent))
-load_dotenv(Path(__file__).parent.parent / ".env")
-
-# load keyword search retriever
-with open('data/processed/retriever.pkl', 'rb') as file:
-    retriever = pickle.load(file)
+# sys.path.insert(0, str(Path(__file__).parent))
+# load_dotenv(Path(__file__).parent.parent / ".env")
+load_dotenv()
 
 # load semantic search index
 hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
@@ -39,6 +37,21 @@ vector_store = FAISS.load_local(
     embeddings,
     allow_dangerous_deserialization=True
 )
+
+semantic_retriever = vector_store.as_retriever(
+    search_type="similarity",
+    search_kwargs={"k": 5}
+)
+
+# load keyword search retriever
+with open('data/processed/retriever.pkl', 'rb') as file:
+    bm25_retriever = pickle.load(file)
+
+ensemble_retriever = EnsembleRetriever(
+    retrievers=[bm25_retriever, semantic_retriever],
+    weights=[0.2, 0.8]  # Example: asigning 40% importance to BM25, 60% to Semantic Search
+)
+
 
 # shiny app
 
@@ -152,8 +165,8 @@ def server(input, output, session):
 
         if search_type.get() == "keyword":
             tokenized_query = preprocess_without_using_stopwords(query)
-            scores = np.sort(retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
-            documents = retriever.invoke(query)
+            scores = np.sort(bm25_retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
+            documents = bm25_retriever.invoke(query)
             return zip(documents, scores)
         elif search_type.get() == "semantic":
             return vector_store.similarity_search_with_score(query, k=5)
@@ -216,7 +229,7 @@ def server(input, output, session):
 
     @chat.on_user_submit  
     async def handle_user_input(user_input: str): 
-        chat_response = get_rag_response(user_input, retriever)
+        chat_response = get_rag_response(user_input, semantic_retriever)
 
 
         await chat.append_message(chat_response)
