@@ -117,6 +117,8 @@ def server(input, output, session):
 
     search_type = reactive.Value(None)
 
+    chat = ui.Chat(id="chat") 
+
     @reactive.effect
     @reactive.event(input.keyword)
     def _():
@@ -126,6 +128,16 @@ def server(input, output, session):
     @reactive.event(input.semantic)
     def _():
         search_type.set("semantic")
+
+    # @reactive.effect
+    # @chat.on_user_submit
+    # def _():
+    #     if SEMANTIC_TOGGLE:
+    #         search_type.set("rag-semantic")
+    #     else:
+    #         search_type.set("rag-ensemble")
+
+
 
     # perform search
 
@@ -142,6 +154,11 @@ def server(input, output, session):
             return zip(documents, scores)
         elif search_type.get() == "semantic":
             return vector_store.similarity_search_with_score(query, k=5)
+        # elif search_type.get() == "rag-semantic":
+        #     return semantic_retiever()
+        # elif search_type.get() == "rag-ensemble":
+        #     return ensemble_retiever()
+    
 
     # display search results
 
@@ -192,10 +209,13 @@ def server(input, output, session):
 
         return df
     
-    chat = ui.Chat(id="chat")  
+     
 
     @chat.on_user_submit  
-    async def handle_user_input(user_input: str):  
+    async def handle_user_input(user_input: str): 
+            
+
+
         await chat.append_message(f"You said: {user_input}") # REPLACE THIS
 
 
