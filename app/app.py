@@ -16,6 +16,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 path_to_src = "src/"
 sys.path.insert(0, path_to_src)
 from preprocess import preprocess_without_using_stopwords
+from rag_pipeline import get_rag_response
 
 # Shiny-related imports
 from shiny import App, render, ui, reactive, req
@@ -215,10 +216,10 @@ def server(input, output, session):
 
     @chat.on_user_submit  
     async def handle_user_input(user_input: str): 
-            
+        chat_response = get_rag_response(user_input, retriever)
 
 
-        await chat.append_message(f"You said: {user_input}") # REPLACE THIS
+        await chat.append_message(chat_response)
 
 
 app = App(app_ui, server)
