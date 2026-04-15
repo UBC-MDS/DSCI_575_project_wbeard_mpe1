@@ -52,7 +52,6 @@ ensemble_retriever = EnsembleRetriever(
     weights=[0.2, 0.8]  # Example: asigning 40% importance to BM25, 60% to Semantic Search
 )
 
-
 # shiny app
 
 HELP_TEXT = "Welcome to the Find Good Books Dashboard. " \
@@ -84,6 +83,7 @@ app_ui = ui.page_navbar(
                     ),
                 ),
                 ui.nav_panel("Chat",
+                    ui.input_switch("rag_switch", "Use Ensemble Search", False),
                     ui.chat_ui("chat"), 
                 ),
             ),
@@ -105,7 +105,6 @@ app_ui = ui.page_navbar(
                 fill=False,
             ),
         ui.card(ui.output_data_frame("data")),
-        # FOOTER,
         ),
         col_widths=(3, 9),
     ),
@@ -115,7 +114,6 @@ app_ui = ui.page_navbar(
     title="Find Good Books Dashboard",
     fillable=True,
 )
-
 
 def server(input, output, session):
 
@@ -145,37 +143,40 @@ def server(input, output, session):
     def _():
         search_type.set("semantic")
 
-    # @reactive.effect
-    # @chat.on_user_submit
-    # def _():
-    #     if SEMANTIC_TOGGLE:
-    #         search_type.set("rag-semantic")
-    #     else:
+    # # @reactive.effect
+    # @chat.on_user_submit  
+    # async def _():
+    #     if input.rag_switch():
     #         search_type.set("rag-ensemble")
-
-
+    #     else:
+    #         search_type.set("rag-semantic")
 
     # perform search
-
     @reactive.calc
     @reactive.event(input.keyword, input.semantic)
     def search_results():
-        query = input.search()
+
+        search_type_str = search_type.get()
+
+        query = ""
+        if search_type_str in ["keyword", "semantic"]:
+            query = input.search()
+        elif search_type_str in ["rag-semantic", "rag-ensemble"]:
+            query = chat.user_input()
         req(query)
 
-        if search_type.get() == "keyword":
+        if search_type_str == "keyword":
             tokenized_query = preprocess_without_using_stopwords(query)
             scores = np.sort(bm25_retriever.vectorizer.get_scores(tokenized_query))[::-1][:5]
             documents = bm25_retriever.invoke(query)
             return zip(documents, scores)
-        elif search_type.get() == "semantic":
+        elif search_type_str == "semantic":
             return vector_store.similarity_search_with_score(query, k=5)
-        # elif search_type.get() == "rag-semantic":
-        #     return semantic_retiever()
-        # elif search_type.get() == "rag-ensemble":
-        #     return ensemble_retiever()
+        elif search_type_str == "rag-semantic":
+            return semantic_retriever.invoke(query)
+        elif search_type_str == "rag-ensemble":
+            return ensemble_retriever.invoke(query)
     
-
     # display search results
 
     @reactive.calc
@@ -224,15 +225,13 @@ def server(input, output, session):
         df = data_results()
 
         return df
-    
-     
 
     @chat.on_user_submit  
     async def handle_user_input(user_input: str): 
-        chat_response = get_rag_response(user_input, semantic_retriever)
-
-
+        if input.rag_switch():
+            chat_response = get_rag_response(user_input, ensemble_retriever)
+        else:
+            chat_response = get_rag_response(user_input, semantic_retriever)
         await chat.append_message(chat_response)
-
 
 app = App(app_ui, server)
