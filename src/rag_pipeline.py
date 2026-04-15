@@ -70,7 +70,9 @@ SYSTEM_PROMPT = """
     Always provide the title and author, when available.
     Do not include results that do not have both title and author.
     If there isn't helpful information in the context, just say that
-    there are no relevant books available in the books sample."""
+    there are no relevant books available in the books sample.
+    Be very brief, answer is less then 40 words.
+    """
 
 
 def build_prompt(query, context):
