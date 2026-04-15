@@ -83,7 +83,11 @@ app_ui = ui.page_navbar(
                     ),
                 ),
                 ui.nav_panel("Chat",
-                    ui.input_switch("rag_switch", "Use Ensemble Search", False),
+                    ui.input_radio_buttons(  
+                        id = "rag_switch",
+                        label = "",
+                        choices = {False: "Semantic RAG", True: "Ensemble RAG"},  
+                    ),
                     ui.chat_ui("chat"), 
                 ),
             ),
@@ -143,17 +147,19 @@ def server(input, output, session):
     def _():
         search_type.set("semantic")
 
-    # @reactive.effect
+    chat_trigger = reactive.Value("") # trigger to start the process to display dataframe
+
     @chat.on_user_submit  
     async def _(user_input: str):
         if input.rag_switch():
             search_type.set("rag-ensemble")
         else:
             search_type.set("rag-semantic")
+        chat_trigger.set(user_input)
 
     # perform search
     @reactive.calc
-    @reactive.event(input.keyword, input.semantic)
+    @reactive.event(input.keyword, input.semantic, chat_trigger)
     def search_results():
 
         search_type_str = search_type.get()
@@ -180,21 +186,33 @@ def server(input, output, session):
     # display search results
 
     @reactive.calc
-    @reactive.event(input.keyword, input.semantic)
+    @reactive.event(input.keyword, input.semantic, chat_trigger)
     def data_results():
         documents = search_results()
 
-        rows = []
-        for doc, score in documents:
-            rows.append({
-                "Title": doc.metadata.get("title"),
-                "Author": doc.metadata.get("author"),
-                "Categories": doc.metadata.get("categories"),
-                "Average Rating": doc.metadata.get("average_rating"),
-                "Review": doc.metadata.get("individual_review")[:200],
-                "Price": doc.metadata.get("price"),
-                "Search Score": f"{score:.3f}"
-            })
+        if search_type.get() in ["rag-semantic", "rag-ensemble"]:
+            rows = []
+            for doc in documents:
+                rows.append({
+                    "Title": doc.metadata.get("title"),
+                    "Author": doc.metadata.get("author"),
+                    "Categories": doc.metadata.get("categories"),
+                    "Average Rating": doc.metadata.get("average_rating"),
+                    "Review": doc.metadata.get("individual_review")[:200],
+                    "Price": doc.metadata.get("price"),
+                })
+        else:
+            rows = []
+            for doc, score in documents:
+                rows.append({
+                    "Title": doc.metadata.get("title"),
+                    "Author": doc.metadata.get("author"),
+                    "Categories": doc.metadata.get("categories"),
+                    "Average Rating": doc.metadata.get("average_rating"),
+                    "Review": doc.metadata.get("individual_review")[:200],
+                    "Price": doc.metadata.get("price"),
+                    "Search Score": f"{score:.3f}"
+                })
 
         return pd.DataFrame(rows)
 
