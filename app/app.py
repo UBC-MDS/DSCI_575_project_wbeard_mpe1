@@ -5,29 +5,28 @@ from pathlib import Path
 import sys
 import os
 import pickle
-
-# Third-party imports
-from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
+
+# Search related imports
+from dotenv import load_dotenv
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_classic.retrievers import EnsembleRetriever
 
+# Local imports
 path_to_src = "src/"
 sys.path.insert(0, path_to_src)
 from preprocess import preprocess_without_using_stopwords
 from rag_pipeline import get_rag_response
 
-# Shiny-related imports
+# Shiny imports
 from shiny import App, render, ui, reactive, req
 
 # Some setup
-# sys.path.insert(0, str(Path(__file__).parent))
-# load_dotenv(Path(__file__).parent.parent / ".env")
 load_dotenv()
 
-# load semantic search index
+# load searches
 hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
@@ -43,13 +42,12 @@ semantic_retriever = vector_store.as_retriever(
     search_kwargs={"k": 5}
 )
 
-# load keyword search retriever
 with open('data/processed/retriever.pkl', 'rb') as file:
     bm25_retriever = pickle.load(file)
 
 ensemble_retriever = EnsembleRetriever(
     retrievers=[bm25_retriever, semantic_retriever],
-    weights=[0.2, 0.8]  # Example: asigning 40% importance to BM25, 60% to Semantic Search
+    weights=[0.2, 0.8]
 )
 
 # shiny app
