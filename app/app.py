@@ -143,13 +143,13 @@ def server(input, output, session):
     def _():
         search_type.set("semantic")
 
-    # # @reactive.effect
-    # @chat.on_user_submit  
-    # async def _():
-    #     if input.rag_switch():
-    #         search_type.set("rag-ensemble")
-    #     else:
-    #         search_type.set("rag-semantic")
+    # @reactive.effect
+    @chat.on_user_submit  
+    async def _(user_input: str):
+        if input.rag_switch():
+            search_type.set("rag-ensemble")
+        else:
+            search_type.set("rag-semantic")
 
     # perform search
     @reactive.calc
