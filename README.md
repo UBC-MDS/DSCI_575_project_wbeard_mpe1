@@ -138,9 +138,21 @@ The `Documents` data and embedding are passing into a `langchain` `FAISS` model 
 
 ![RAG pipeline](img/RAG_pipeline.png)
 
+- The user prompt is fed into:
+  - one of the two retriever objects
+  - the augmented prompt
+- A retriever is used to search the book database and returns five relevant books: results dataframe
+- The user prompt, results dataframe, and system prompt are combined to created the augmented prompt
+- The augmented prompt and model type are passed into a hugging face chat object
+- The hugging face chat returns a response
+
 ##### Semantic retriever
 
+Use the FAISS retriever pathway in the RAG pipeline
+
 ##### Ensemble retriever
+
+Use the Ensemble retriever pathway in the RAG pipeline
 
 ## License
 
