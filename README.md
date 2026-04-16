@@ -99,7 +99,15 @@ shiny run --reload app/app.py
 
 ### 2. With our app open
 
+#### Directly search
+
 Enter your search query into the input field and select the search type you would like to use. The generated results are those top-ranked-books based on our data sample.
+
+#### Search with chat
+
+To explore books using chat select the chat tab on the left. Behind the scenes the chat will search the books using either semantic search or an ensemble of semantic and keyword search. Select the search type you at the top then ask the chat about what interests you.
+
+The chat will give a brief summary of the most relevant books and the underlying relevant books will also be displayed on the right.
 
 ### Demo
 
