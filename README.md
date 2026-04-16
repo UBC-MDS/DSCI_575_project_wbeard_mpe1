@@ -107,19 +107,77 @@ Enter your search query into the input field and select the search type you woul
 
 ### Retrieval workflows
 
+There are two option for how to explore the book dataset each with two sub-options:
+
+- [Directly searching the database](#direct-search)
+  - [Keyword search](#keyword-search-bm25)
+  - [Semantic search](#semantic-search-faiss)
+- [Search with chat: retriever augmented generation](#retriever-augmented-generation)
+  - [Semantic retriever](#semantic-retriever)
+  - [Ensemble retriever](#ensemble-retriever)
+
+#### Direct search
+
 For both workflows, first a list of `langchain` `Documents` is created which contain the book meta data and the text to be searched (author, title, description, etc)
 
-#### Keyword search (BM25)
+##### Keyword search (BM25)
 
 A preprocessor is created for the text to be used in keyword search. This preprocessor has the following steps: lowercase the text, remove all non-alphanumeric characters, and remove common english stopwords.
 
 The `Documents` data and preprocessor are then passed into a `langchain` `BM25Retriever` object and the retriever is saved. The shiny app then load the retriever and passes in the user query.
 
-#### Semantic search (FAISS)
+##### Semantic search (FAISS)
 
 A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
 
 The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the resulting vector store is saved. The shiny app then loads the vector store and imports the embedding to be able to process the user query.
+
+#### Retriever augmented generation
+
+##### Pipeline
+
+```{mermaid}
+flowchart LR
+query[User prompt]
+faiss1[FAISS retriever]
+faiss2[FAISS retriever]
+bm25[BM25 retriever]
+search_result[Results dataframe]
+prompt[Augmented prompt]
+system_prompt[System prompt]
+hugging[ChatHuggingFace LLM]
+model[model: meta-llama/Meta-Llama-3-8B-Instruct]
+response[Response]
+
+subgraph **Retriever**
+faiss1
+subgraph Ensemble
+faiss2
+bm25
+end
+faiss2 & bm25
+end
+
+faiss1 --> search_result
+Ensemble --> search_result
+
+prompt --> hugging
+model --> hugging
+
+subgraph **Generation**
+hugging
+end
+
+query -. or .-> faiss1 & Ensemble
+query & search_result --> prompt
+hugging -->  response
+
+system_prompt --> prompt
+```
+
+##### Semantic retriever
+
+##### Ensemble retriever
 
 ## License
 
