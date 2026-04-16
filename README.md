@@ -5,7 +5,8 @@
 - [About](#about)
 - [Setup](#setup)
 - [Data](#data)
-- [Dashboard](#dashboard)
+- [How to use dashboard](#how-to-use-dashboard)
+- [Retrieval workflows](#retrieval-workflows)
 - [License](#license)
 - [Contributors](#contributors)
 
@@ -85,7 +86,7 @@ Since this changes the sample book data, both the key-word and semantic search s
 python src/search-systems.py
 ```
 
-## Dashboard
+## How to use dashboard
 
 Our dashboard is a Shiny for Python app. Currently, our repository is set to private which prevents it from being hosted on Posit Connect Cloud. To run our app and interact with it, please make sure you have followed the [Setup](#setup) instructions and ensure you have the correct environment activated. Once you have done that, proceed.
 
@@ -113,7 +114,7 @@ The chat will give a brief summary of the most relevant books and the underlying
 
 ![Here is a demo of the dashboard:](img/demo.gif)
 
-### Retrieval workflows
+## Retrieval workflows
 
 There are two option for how to explore the book dataset each with two sub-options:
 
@@ -124,25 +125,25 @@ There are two option for how to explore the book dataset each with two sub-optio
   - [Semantic retriever](#semantic-retriever)
   - [Ensemble retriever](#ensemble-retriever)
 
-#### Direct search
+### Direct search
 
 For both workflows, first a list of `langchain` `Documents` is created which contain the book meta data and the text to be searched (author, title, description, etc)
 
-##### Keyword search (BM25)
+#### Keyword search (BM25)
 
 A preprocessor is created for the text to be used in keyword search. This preprocessor has the following steps: lowercase the text, remove all non-alphanumeric characters, and remove common english stopwords.
 
 The `Documents` data and preprocessor are then passed into a `langchain` `BM25Retriever` object and the retriever is saved. The shiny app then load the retriever and passes in the user query.
 
-##### Semantic search (FAISS)
+#### Semantic search (FAISS)
 
 A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
 
 The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the resulting vector store is saved. The shiny app then loads the vector store and imports the embedding to be able to process the user query.
 
-#### Retriever augmented generation
+### Retriever augmented generation
 
-##### Pipeline
+#### Pipeline
 
 ![RAG pipeline](img/RAG_pipeline.png)
 
@@ -154,11 +155,11 @@ The `Documents` data and embedding are passing into a `langchain` `FAISS` model 
 - The augmented prompt and model type are passed into a hugging face chat object
 - The hugging face chat returns a response
 
-##### Semantic retriever
+#### Semantic retriever
 
 Use the FAISS retriever pathway in the RAG pipeline
 
-##### Ensemble retriever
+#### Ensemble retriever
 
 Use the Ensemble retriever pathway in the RAG pipeline
 
