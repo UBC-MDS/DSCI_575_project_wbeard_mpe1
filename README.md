@@ -5,7 +5,8 @@
 - [About](#about)
 - [Setup](#setup)
 - [Data](#data)
-- [Dashboard](#dashboard)
+- [How to use dashboard](#how-to-use-dashboard)
+- [Retrieval workflows](#retrieval-workflows)
 - [License](#license)
 - [Contributors](#contributors)
 
@@ -51,7 +52,7 @@ nltk.download('stopwords')
 3. Click create new token button (top right).
 4. Token type: "Read"
 5. Create token.
-6. Save token in `.env`: HUGGINGFACEHUB_API_TOKEN="your_api_key_here", see `.env.sample`
+6. Save token in `.env`: HF_TOKEN="your_api_key_here", see `.env.sample`
 
 ### 4) Download and process data
 
@@ -85,7 +86,7 @@ Since this changes the sample book data, both the key-word and semantic search s
 python src/search-systems.py
 ```
 
-## Dashboard
+## How to use dashboard
 
 Our dashboard is a Shiny for Python app. Currently, our repository is set to private which prevents it from being hosted on Posit Connect Cloud. To run our app and interact with it, please make sure you have followed the [Setup](#setup) instructions and ensure you have the correct environment activated. Once you have done that, proceed.
 
@@ -99,13 +100,32 @@ shiny run --reload app/app.py
 
 ### 2. With our app open
 
+#### Directly search
+
 Enter your search query into the input field and select the search type you would like to use. The generated results are those top-ranked-books based on our data sample.
+
+#### Search with chat
+
+To explore books using chat select the chat tab on the left. Behind the scenes the chat will search the books using either semantic search or an ensemble of semantic and keyword search. Select the search type you at the top then ask the chat about what interests you.
+
+The chat will give a brief summary of the most relevant books and the underlying relevant books will also be displayed on the right.
 
 ### Demo
 
 ![Here is a demo of the dashboard:](img/demo.gif)
 
-### Retrieval workflows
+## Retrieval workflows
+
+There are two option for how to explore the book dataset each with two sub-options:
+
+- [Directly searching the database](#direct-search)
+  - [Keyword search](#keyword-search-bm25)
+  - [Semantic search](#semantic-search-faiss)
+- [Search with chat: retriever augmented generation](#retriever-augmented-generation)
+  - [Semantic retriever](#semantic-retriever)
+  - [Ensemble retriever](#ensemble-retriever)
+
+### Direct search
 
 For both workflows, first a list of `langchain` `Documents` is created which contain the book meta data and the text to be searched (author, title, description, etc)
 
@@ -120,6 +140,28 @@ The `Documents` data and preprocessor are then passed into a `langchain` `BM25Re
 A embedding object is created using functionality from `HuggingFace` with the model `sentence-transformers/all-MiniLM-L6-v2`. 
 
 The `Documents` data and embedding are passing into a `langchain` `FAISS` model and the resulting vector store is saved. The shiny app then loads the vector store and imports the embedding to be able to process the user query.
+
+### Retriever augmented generation
+
+#### Pipeline
+
+![RAG pipeline](img/RAG_pipeline.png)
+
+- The user prompt is fed into:
+  - one of the two retriever objects
+  - the augmented prompt
+- A retriever is used to search the book database and returns five relevant books: results dataframe
+- The user prompt, results dataframe, and system prompt are combined to created the augmented prompt
+- The augmented prompt and model type are passed into a hugging face chat object
+- The hugging face chat returns a response
+
+#### Semantic retriever
+
+Use the FAISS retriever pathway in the RAG pipeline
+
+#### Ensemble retriever
+
+Use the Ensemble retriever pathway in the RAG pipeline
 
 ## License
 
