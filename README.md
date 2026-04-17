@@ -51,7 +51,7 @@ nltk.download('stopwords')
 3. Click create new token button (top right).
 4. Token type: "Read"
 5. Create token.
-6. Save token in `.env`: HUGGINGFACEHUB_API_TOKEN="your_api_key_here", see `.env.sample`
+6. Save token in `.env`: HF_TOKEN="your_api_key_here", see `.env.sample`
 
 ### 4) Download and process data
 
