@@ -13,13 +13,13 @@ from langchain_core.output_parsers import StrOutputParser
 
 
 load_dotenv()
-hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+hf_token = os.getenv("HF_TOKEN")
 
 llm_endpoint = HuggingFaceEndpoint(
     repo_id="meta-llama/Meta-Llama-3-8B-Instruct",
-    task="text-generation",  # Keep this as text-generation for the base
+    # repo_id="meta-llama/Llama-3.2-1B-Instruct", # used for LLM comparison in final milestone
+    task="text-generation",
     max_new_tokens=100,
-    # provider="auto" #"novita"
 )
 
 llm = ChatHuggingFace(llm=llm_endpoint)
