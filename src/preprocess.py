@@ -5,7 +5,7 @@ from nltk.tokenize import word_tokenize
 
 # required to run on posit connect cloud
 nltk.download('stopwords')
-nltk.download('punkt')
+nltk.download('punkt_tab')
 
 stop_words = set(stopwords.words('english'))
 
