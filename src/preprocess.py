@@ -1,5 +1,5 @@
 import re
-#import nltk
+import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
