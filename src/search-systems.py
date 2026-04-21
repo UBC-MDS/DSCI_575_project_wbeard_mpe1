@@ -1,23 +1,32 @@
 """Create key-word and semantic search systems"""
 
 import duckdb
-import pandas as pd
 
 from langchain_community.retrievers import BM25Retriever
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 
-from preprocess import preprocess
 from dotenv import load_dotenv
 import os
 import pickle
+import sys
+from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.preprocess import preprocess
 
 c2 = duckdb.connect()
 
 df = c2.execute("SELECT * FROM read_parquet('data/processed/merged.parquet') WHERE rating_order = 1").df()
 df = df.fillna("")
+
+# Setup paths
+
+index_path = Path("data") / "processed" / "faiss_index"
+bm25_retriever_path = Path("data") / "processed" / "retriever.pkl"
 
 # create documents
 
@@ -67,7 +76,7 @@ vector_store = FAISS.from_documents(documents, embeddings)
 
 # save search systems
 
-with open('data/processed/retriever.pkl', 'wb') as file:
+with bm25_retriever_path.open('wb') as file:
     pickle.dump(retriever, file)
 
-vector_store.save_local("data/processed/faiss_index")
+vector_store.save_local(index_path)
