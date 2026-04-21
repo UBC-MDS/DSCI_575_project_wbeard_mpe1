@@ -122,6 +122,7 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.search)
     def set_button_state():
+        """Enable search buttons only when there is text in the input text box."""
         if input.search():
             ui.update_action_button("keyword", disabled=False)
             ui.update_action_button("semantic", disabled=False)
@@ -138,17 +139,20 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.keyword)
     def _():
+        """Set search type to keyword when keyword search button is clicked."""
         search_type.set("keyword")
 
     @reactive.effect
     @reactive.event(input.semantic)
     def _():
+        """Set search type to semantic when semantic search button is clicked."""
         search_type.set("semantic")
 
     chat_trigger = reactive.Value("") # trigger to start the process to display dataframe
 
     @chat.on_user_submit  
     async def _(user_input: str):
+        """Set search type to rag-semantic/rag-semantic when chat prompted is submitted"""
         if input.rag_switch():
             search_type.set("rag-ensemble")
         else:
@@ -159,6 +163,7 @@ def server(input, output, session):
     @reactive.calc
     @reactive.event(input.keyword, input.semantic, chat_trigger)
     def search_results():
+        """Get search results based on the current search type."""
 
         search_type_str = search_type.get()
 
@@ -182,10 +187,10 @@ def server(input, output, session):
             return ensemble_retriever.invoke(query)
     
     # display search results
-
     @reactive.calc
     @reactive.event(input.keyword, input.semantic, chat_trigger)
     def data_results():
+        """Create search results dataframe with or without score depending on search type."""
         documents = search_results()
 
         if search_type.get() in ["rag-semantic", "rag-ensemble"]:
@@ -216,6 +221,7 @@ def server(input, output, session):
 
     @render.text
     def avg_rating():
+        """Create text for average book rating score card."""
         df = data_results()
 
         max_avg_rating = df["Average Rating"].max()
@@ -225,10 +231,12 @@ def server(input, output, session):
 
     @render.text
     def book_count():
+        """Create text for book count score card."""
         return data_results().shape[0]
 
     @render.text
     def price_range():
+        """Create text for price range score card."""
         df = data_results()
 
         max_price = df["Price"].max()
@@ -238,12 +246,14 @@ def server(input, output, session):
 
     @render.data_frame
     def data():
+        """Helper function for shiny to render the search results dataframe."""
         df = data_results()
 
         return df
 
     @chat.on_user_submit  
     async def handle_user_input(user_input: str): 
+        """Get RAG response for user based on selected RAG pipeline."""
         if input.rag_switch():
             chat_response = get_rag_response(user_input, ensemble_retriever)
         else:
