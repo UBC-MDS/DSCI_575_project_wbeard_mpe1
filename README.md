@@ -3,7 +3,8 @@
 ## Table of Contents
 
 - [About](#about)
-- [Setup](#setup)
+- [Dashboard](#dashboard)
+- [Local Setup](#local-setup)
 - [Data](#data)
 - [How to use dashboard](#how-to-use-dashboard)
 - [Retrieval workflows](#retrieval-workflows)
@@ -12,13 +13,20 @@
 
 ## About
 
-This dashboard uses a **sample** of books from Amazon's millions of book reviews. The user will be able to search these books using two different types of search systems: key-word- and/or semantic-based.
+This dashboard uses a **sample** of the highest rated books from Amazon's millions of book reviews. The user will be able to search these books using two different basic types of search systems: keyword or semantic. There is also an option to use retrieval augmented generation via a chat interface.
 
-**Note:** Scripts to create our BM25 and FAISS systems are in one script-`search-systems.py`-rather than individual ones. This is because we created a single object of documents, and subsequently, used it in creating our BM25 retriever and the FAISS vector store in one go.
+### Links
 
-**Github Repo:** <https://github.com/UBC-MDS/DSCI_575_project_wbeard_mpe1>
+- **Github Repo:** <https://github.com/UBC-MDS/DSCI_575_project_wbeard_mpe1>
+- **Posit Cloud Dashboard Deployment** <https://019dac27-bcb0-d837-c305-f05496dcbe18.share.connect.posit.cloud/>
 
-## Setup
+## Dashboard
+
+- Hosted: The dashboard can be found hosted on posit cloud: [Books dashboard](https://019dac27-bcb0-d837-c305-f05496dcbe18.share.connect.posit.cloud/).
+
+- Locally: You can run the dashboard locally using the below setup [instructions](#local-setup).
+
+## Local setup
 
 ### 1) Download the repository
 
@@ -56,21 +64,19 @@ nltk.download('stopwords')
 
 ### 4) Download and process data
 
-See data section.
+Downloading and processing the data is **only needed to update the search methods with new data**. The dashboard can be run locally as is because the `faiss_index` and bm25 `retriever.pkl` are saved in the github repo.
 
-## Data
+#### Warning about downloading and processing data
 
-A sample from Amazon's "Books" reviews. Source: [Reviews and Meta Data](https://amazon-reviews-2023.github.io/)
+These are very large files!
 
-**Note:** these are very large files. To prevent having every individual download them to run our project, we have pre-sampled data from both the "review" and "meta" datasets. The two results were then joined and turned into a parquet file: `data/processed/merged.parquet`. This was done locally and then pushed to the repository, providing ease of use for anyone running this project. If you would like to see how we did this, please read the instructions below.
+To prevent having every individual download them to run our project, we have pre-sampled data from both the "review" and "meta" datasets. The two results were then joined and turned into a parquet file: `data/processed/merged.parquet`. This was done locally and then pushed to the repository, providing ease of use for anyone running this project. If you would like to see how we did this, please read the instructions below.
 
-The data consists of meta data for each book: author, title, description, genre, overall rating, number of ratings and price. There is also review level data for each book: review text, rating
-
-### 1) Download the raw data
+#### 1) Download the raw data
 
 Follow the "Source" link above and download both files for the "Books" category. Unzip the files and place in the `data/raw` folder of this project, locally.
 
-### 2) Generate sample data
+#### 2) Generate sample data
 
 To generate a sample of books, their reviews, and merge them into a single parquet file:
 
@@ -78,7 +84,7 @@ To generate a sample of books, their reviews, and merge them into a single parqu
 python src/get_data_sample.py
 ```
 
-### 3) Regenerate search systems
+#### 3) Regenerate search systems
 
 Since this changes the sample book data, both the key-word and semantic search systems need to be updated to reflect what is now in this parquet file:
 
@@ -86,19 +92,33 @@ Since this changes the sample book data, both the key-word and semantic search s
 python src/search-systems.py
 ```
 
+## Data
+
+A sample from Amazon's "Books" reviews. Source: [Reviews and Meta Data](https://amazon-reviews-2023.github.io/)
+
+The data consists of meta data for each book: author, title, description, genre, overall rating, number of ratings and price. There is also review level data for each book: review text, rating
+
 ## How to use dashboard
 
 Our dashboard is a Shiny for Python app. Currently, our repository is set to private which prevents it from being hosted on Posit Connect Cloud. To run our app and interact with it, please make sure you have followed the [Setup](#setup) instructions and ensure you have the correct environment activated. Once you have done that, proceed.
 
-### 1) Navigate to the project root directory
+### 1) Open dashboard
 
-Run the following command in your terminal. Copy and paste the local URL [**http://127.0.0.1:8000**](http://127.0.0.1:8000){.uri} into your browser to connect.
+#### On posit cloud
+
+[Books dashboard](https://019dac27-bcb0-d837-c305-f05496dcbe18.share.connect.posit.cloud/)
+
+#### Locally
+
+- Follow the [setup instruction](#local-setup).
+- Navigate to the project root directory.
+- Run the following command in your terminal. Copy and paste the local URL [**http://127.0.0.1:8000**](http://127.0.0.1:8000){.ur} into your browser to connect.
 
 ``` bash
 shiny run --reload app/app.py
 ```
 
-### 2. With our app open
+### 2. Search
 
 #### Directly search
 

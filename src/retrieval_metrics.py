@@ -1,7 +1,3 @@
-from langchain_community.retrievers import BM25Retriever
-from langchain_core.documents import Document
-
-from preprocess import preprocess_without_using_stopwords
 
 # Standard imports
 from pathlib import Path
@@ -17,11 +13,17 @@ from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 
 # Some setup
-sys.path.insert(0, str(Path(__file__).parent))
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.preprocess import preprocess_without_using_stopwords
+
+index_path = Path("data") / "processed" / "faiss_index"
+bm25_retriever_path = Path("data") / "processed" / "retriever.pkl"
+
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-
-with open('data/processed/retriever.pkl', 'rb') as file:
+with bm25_retriever_path.open('rb') as file:
     retriever = pickle.load(file)
 
 # load semantic search index
@@ -30,7 +32,7 @@ embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 vector_store = FAISS.load_local(
-    "data/processed/faiss_index",
+    index_path,
     embeddings,
     allow_dangerous_deserialization=True
 )
