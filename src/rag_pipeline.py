@@ -3,8 +3,7 @@ import os
 
 from dotenv import load_dotenv
 
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEmbeddings
+from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from langchain_core.output_parsers import StrOutputParser
 
