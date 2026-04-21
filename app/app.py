@@ -15,10 +15,12 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_classic.retrievers import EnsembleRetriever
 
 # Local imports
-path_to_src = "src/"
-sys.path.insert(0, path_to_src)
-from preprocess import preprocess_without_using_stopwords
-from rag_pipeline import get_rag_response
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from src.preprocess import preprocess_without_using_stopwords
+from src.rag_pipeline import get_rag_response
 
 # Shiny imports
 from shiny import App, render, ui, reactive, req
@@ -26,13 +28,18 @@ from shiny import App, render, ui, reactive, req
 # Some setup
 load_dotenv()
 
+# Setup paths
+
+index_path = Path("data") / "processed" / "faiss_index"
+bm25_retriever_path = Path("data") / "processed" / "retriever.pkl"
+
 # load searches
 hf_token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 embeddings = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2"
 )
 vector_store = FAISS.load_local(
-    "data/processed/faiss_index",
+    index_path,
     embeddings,
     allow_dangerous_deserialization=True
 )
@@ -42,7 +49,7 @@ semantic_retriever = vector_store.as_retriever(
     search_kwargs={"k": 5}
 )
 
-with open('data/processed/retriever.pkl', 'rb') as file:
+with bm25_retriever_path.open('rb') as file:
     bm25_retriever = pickle.load(file)
 
 ensemble_retriever = EnsembleRetriever(

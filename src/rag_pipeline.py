@@ -1,11 +1,8 @@
 
 import os
 
-import pickle
-
 from dotenv import load_dotenv
 
-# from langchain_classic.retrievers import EnsembleRetriever
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint, HuggingFaceEmbeddings
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda
@@ -59,8 +56,6 @@ def build_prompt(query, context):
         Answer based on the Amazon datasets: """
 
     return augmented_prompt
-
-# one function, two parameters: query
 
 def get_rag_response(question, retriever_type):
     """Get RAG response from llm based on user questions and retriever"""
